@@ -25,8 +25,14 @@ module.exports = {
     if (!user.inventory) user.inventory = {};
     if (user.cash < item.price) return message.reply(`❌ Мөнгө хүрэлцэхгүй! Cash: ₮${shortNum(user.cash)} / Шаардлагатай: ₮${shortNum(item.price)}`);
 
-    if (['rob_shield', 'bank_shield', 'xp_boost', 'bank_expand'].includes(item.key) && user.inventory[item.key]) {
-      return message.reply(`❌ **${item.name}** аль хэдийн байна!`);
+    // Давхар авах шалгалт
+    if (item.key === 'rob_shield' && user.inventory.rob_shield) return message.reply(`❌ **${item.name}** аль хэдийн байна!`);
+    if (item.key === 'bank_shield' && user.inventory.bank_shield) return message.reply(`❌ **${item.name}** аль хэдийн байна!`);
+    if (item.key === 'bank_expand' && user.bankExpanded) return message.reply(`❌ **${item.name}** аль хэдийн байна!`);
+    // XP Boost — хугацаа дуусаагүй байвал л татгалзана
+    if (item.key === 'xp_boost' && user.inventory.xp_boost && user.inventory.xp_boost > Date.now()) {
+      const left = Math.ceil((user.inventory.xp_boost - Date.now()) / 60000);
+      return message.reply(`❌ XP Boost идэвхтэй байна! **${left} минут** үлдсэн.`);
     }
 
     user.cash -= item.price;
