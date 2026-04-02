@@ -17,17 +17,16 @@ const commandFiles = fs.readdirSync('./commands').filter(f => f.endsWith('.js'))
 for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
   client.commands.set(command.name, command);
-  if (command.aliases) {
-    command.aliases.forEach(alias => client.aliases.set(alias, command.name));
-  }
+  if (command.aliases) command.aliases.forEach(a => client.aliases.set(a, command.name));
 }
 
-client.on('ready', () => {
-  console.log(`✅ Bot is online as ${client.user.tag}`);
-});
+client.on('ready', () => console.log(`✅ Bot is online as ${client.user.tag}`));
 
 const cooldowns = new Map();
 const SPAM_COOLDOWN = 1500;
+
+// Согтолтоос хамааралгүй команд
+const ALWAYS_ALLOWED = ['pub', 'cigarshop', 'help', 'balance', 'bal', 'profile', 'pro'];
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
@@ -44,11 +43,27 @@ client.on('messageCreate', async (message) => {
   if (cooldowns.has(key) && now - cooldowns.get(key) < SPAM_COOLDOWN) return;
   cooldowns.set(key, now);
 
+  // Согтолт шалгах
+  if (!ALWAYS_ALLOWED.includes(resolvedName)) {
+    try {
+      const { getUser } = require('./db');
+      const user = getUser(message.author.id);
+      if ((user.drunk || 0) >= 6) {
+        const responses = [
+          '🥴 Та хэтэрхий согтсон тул энэ командыг ашиглах боломжгүй!',
+          '🍺 Та согтсон байна... юу хийж байгаагаа ч мэдэхгүй юм шиг байна!',
+          '🥃 Гараа хүргэж чадахгүй байна... хэтэрхий согтсон!',
+        ];
+        return message.reply(responses[Math.floor(Math.random() * responses.length)]);
+      }
+    } catch {}
+  }
+
   try {
     await command.execute(message, args);
   } catch (err) {
     console.error(err);
-    message.reply('❌ Алдаа гарлаа. Дахин оролдоно уу.').catch(() => {});
+    message.reply('❌ Алдаа гарлаа.').catch(() => {});
   }
 });
 
