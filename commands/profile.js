@@ -9,6 +9,7 @@ module.exports = {
     const target = message.mentions.users.first() || message.author;
     let user = getUser(target.id);
     user = updateHunger(user);
+    const hasSupremeBadge = !!user.inventory?.supreme_badge;
     const job = getJob(user.level);
     const rank = getRank(user.level);
     const nextXP = xpForNextLevel(user.level);
@@ -26,7 +27,8 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
-      .setColor(0xE8B84B)
+      // SUPREME badge идэвхтэй үед profile-н өнгийг "solid" буюу өөрөөр гаргана.
+      .setColor(hasSupremeBadge ? 0xFFD700 : 0xE8B84B)
       .setTitle(`${rank.emoji} ${target.username}`)
       .setThumbnail(target.displayAvatarURL())
       .addFields(
@@ -41,6 +43,10 @@ module.exports = {
         { name: '💰 Нийт', value: `₮${shortNum(user.cash + user.bank)}`, inline: true },
         { name: `🍽️ Өлсгөлөн ${Math.floor(user.hunger)}%`, value: hungerBar },
       );
+
+    if (hasSupremeBadge) {
+      embed.addFields({ name: '🏅 SUPREME Badge', value: 'Идэвхтэй', inline: true });
+    }
     message.reply({ embeds: [embed] });
   },
 };
