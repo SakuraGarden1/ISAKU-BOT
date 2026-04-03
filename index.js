@@ -1,5 +1,6 @@
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('fs');
+const { isProtected } = require('./protected_roles');
 
 const client = new Client({
   intents: [
@@ -48,7 +49,9 @@ client.on('messageCreate', async (message) => {
     try {
       const { getUser } = require('./db');
       const user = getUser(message.author.id);
-      if ((user.drunk || 0) >= 6) {
+      const hasStaffRole = !!message.member && isProtected(message.member);
+      const drunkBypassForRob = (resolvedName === 'rob' || resolvedName === 'bankrob') && hasStaffRole;
+      if ((user.drunk || 0) >= 6 && !drunkBypassForRob) {
         const responses = [
           '🥴 Та хэтэрхий согтсон тул энэ командыг ашиглах боломжгүй!',
           '🍺 Та согтсон байна... юу хийж байгаагаа ч мэдэхгүй юм шиг байна!',
